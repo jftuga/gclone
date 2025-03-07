@@ -184,7 +184,15 @@ function usage() {
     echo "This will then clone: https://github.com/${gh_name}/repo-name"
 }
 
-# Main program execution begins here
+# =======================================================
+# Main Program Execution
+# =======================================================
+# This section represents the entry point for the script.
+# It validates the execution environment, checks parameters,
+# verifies the GitHub repository exists, handles existing
+# directories, and finally clones the repository if all
+# prerequisites are satisfied.
+# =======================================================
 
 if [[ "$#" -eq "1" && "$1" == "-v" ]] ; then
     echo "gclone v${GCLONE_VERSION}"
@@ -192,6 +200,9 @@ if [[ "$#" -eq "1" && "$1" == "-v" ]] ; then
     exit 0
 fi
 
+# Extract directory information from the current path
+# CURR: Gets the current directory name (the GitHub username) using shell parameter expansion
+# PARENT: Gets the immediate parent directory name to verify we're in the correct GitHub container
 CURR=$(echo "${PWD##*/}")
 PARENT=$(echo "${PWD%/*}" | awk -F/ '{print $NF}')
 
@@ -211,7 +222,8 @@ fi
 REPO="$1"
 URL="https://github.com/${CURR}/${REPO}"
 
-# Before attempting to clone
+# Verify the repository exists before attempting any operations
+# This prevents wasting time on cleanup if the repository isn't valid
 if ! check_repo_exists "${CURR}" "${REPO}"; then
     echo "Error: Repository ${URL} does not exist or is not accessible."
     echo "Please check:"
@@ -227,9 +239,11 @@ remove_directory_if_exists "${REPO}"
 EXIT_CODE=$?
 set -e
 
-# After remove_directory_if_exists
+# Only attempt to clone if the directory was successfully handled
+# This ensures we don't try to clone into a directory that already exists
+# or if the user chose not to remove/rename an existing directory
 if [[ ${EXIT_CODE} -eq 0 ]]; then
-    # Directory doesn't exist, proceed with cloning
+    # Proceed with cloning
     echo
     git clone "${URL}"
 fi
